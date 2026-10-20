@@ -1,0 +1,31 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+}
+
+.App-title {
+  flex: none;
+  font-size: 13px;
+  color: #566175;
+  padding: 2px 0 4px;
+}
+
+.App-chart {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Frappe pins its container to a fixed pixel width; let it fill instead. */
+.App-chart .chart-container {
+  width: 100% !important;
+  height: 100%;
+}
