@@ -1,0 +1,60 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+}
+
+.App-title {
+  flex: none;
+  font-size: 13px;
+  color: #566175;
+  padding: 2px 0 4px;
+}
+
+.App-chart {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.App-chart svg {
+  position: absolute;
+  inset: 0;
+}
+
+.label {
+  font-size: 12px;
+  fill: #4a4f57;
+  pointer-events: none;
+}
+
+.node circle,
+.edge {
+  cursor: default;
+}
+
+.edge {
+  transition: stroke-opacity 0.15s;
+}
+
+.App-tip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(32, 37, 45, 0.92);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: opacity 0.1s;
+}
