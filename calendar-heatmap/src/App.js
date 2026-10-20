@@ -22,6 +22,24 @@ client.config.configureEditorPanel([
   { name: "palette", type: "dropdown", values: Object.keys(PALETTES), defaultValue: "Green" },
 ]);
 
+// Outside Sigma (opening the plugin URL directly) show a year of sample values
+// so the layout can be checked without a workbook.
+const IN_SIGMA = window.parent !== window;
+function sampleData() {
+  const dataPoints = {};
+  const end = new Date();
+  end.setHours(12, 0, 0, 0);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 364);
+  let seed = 7;
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const r = seed / 233280;
+    if (r > 0.35) dataPoints[Math.floor(d.getTime() / 1000)] = Math.round(r * r * 12000);
+  }
+  return { dataPoints, start, end };
+}
+
 // Sigma sends dates as UTC-midnight epoch ms; frappe buckets days in local time.
 // Re-anchor each day to local noon so it lands on the right calendar day.
 function toLocalDay(ts) {
@@ -37,6 +55,7 @@ function App() {
   const ref = React.useRef(null);
   const chart = React.useRef(null);
   const data = React.useMemo(() => {
+    if (!IN_SIGMA) return sampleData();
     const dimension = config.dimension;
     const measure = config.measures;
 
@@ -74,6 +93,18 @@ function App() {
       colors: palette,
       data,
     });
+    // Frappe only adds a blank column after a month that ends on a Saturday, so
+    // other months butt up against the next one. Always end each month with
+    // exactly one blank column instead.
+    const getDomainConfig = c.getDomainConfig.bind(c);
+    c.getDomainConfig = (...args) => {
+      const config = getDomainConfig(...args);
+      const cols = config.cols;
+      const isBlank = col => col.every(day => !day.fill);
+      if (cols.length && isBlank(cols[cols.length - 1])) cols.pop();
+      cols.push(Array.from({ length: 7 }, () => ({})));
+      return config;
+    };
     // Frappe draws at a fixed pixel size and redraws on every resize/update.
     // After each draw, crop the viewBox to the drawn content and let the SVG
     // scale to fill the element.
@@ -103,7 +134,8 @@ function App() {
 
   return (
     <div className="App">
-      {config.title ? <div className="App-title">{config.title}</div> : null}
+      {IN_SIGMA && config.title ? <div className="App-title">{config.title}</div> : null}
+      {!IN_SIGMA ? <div className="App-title">Daily amount (sample data)</div> : null}
       <div className="App-chart" ref={ref} />
     </div>
   );
