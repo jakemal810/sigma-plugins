@@ -12,11 +12,14 @@ html, body, #root {
   padding: 4px 8px;
 }
 
+/* Match Sigma card titles (theme: System UI, text #1b2332). */
 .App-title {
   flex: none;
-  font-size: 13px;
-  color: #566175;
-  padding: 2px 0 4px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #1b2332;
+  padding: 4px 0 8px;
 }
 
 .App-chart {
