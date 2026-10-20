@@ -1,0 +1,62 @@
+# Builds every plugin folder and publishes them to GitHub Pages:
+#   https://<owner>.github.io/<repo>/<plugin>/
+name: Deploy plugins to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build plugins
+        env:
+          CI: false
+        run: |
+          mkdir -p _site
+          for dir in */; do
+            plugin="${dir%/}"
+            [ -f "$plugin/package.json" ] || continue
+            echo "::group::$plugin"
+            npm ci --prefix "$plugin" --no-audit --no-fund
+            npm run build --prefix "$plugin"
+            cp -r "$plugin/build" "_site/$plugin"
+            echo "::endgroup::"
+          done
+          cp README.md _site/README.md
+          {
+            echo '<!doctype html><meta charset="utf-8"><title>Sigma plugins</title><h1>Sigma plugins</h1><ul>'
+            for p in _site/*/; do p="$(basename "$p")"; echo "<li><a href=\"$p/\">$p</a></li>"; done
+            echo '</ul>'
+          } > _site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
