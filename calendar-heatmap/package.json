@@ -1,5 +1,5 @@
 {
-  "name": "frappe-heatmap",
+  "name": "calendar-heatmap",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

@@ -1,4 +1,4 @@
-# Frappe Heatmap — Sigma plugin
+# Calendar Heatmap — Sigma plugin
 
 A calendar heatmap (GitHub-contributions style) for Sigma workbooks, built on [frappe-charts](https://frappe.io/charts). Adapted from the `frappe-heatmap` sample in [sigmacomputing/sigma-sample-plugins](https://github.com/sigmacomputing/sigma-sample-plugins).
 

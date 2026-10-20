@@ -4,7 +4,7 @@ Custom Sigma Computing plugins, one folder per plugin.
 
 | Plugin | What it draws | Local port |
 | --- | --- | --- |
-| [frappe-heatmap](frappe-heatmap) | Calendar heatmap (GitHub-contributions style) | 3000 |
+| [calendar-heatmap](calendar-heatmap) | Calendar heatmap (GitHub-contributions style) | 3000 |
 | [network-graph](network-graph) | Circular node-link diagram of flows | 3001 |
 
 Each folder is a standalone React app. To run one:
