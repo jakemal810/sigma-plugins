@@ -1,30 +1,19 @@
-# Frappe Heatmap — Sigma plugin
+# Sigma plugins
 
-A calendar heatmap (GitHub-contributions style) for Sigma workbooks, built on [frappe-charts](https://frappe.io/charts). Adapted from the `frappe-heatmap` sample in [sigmacomputing/sigma-sample-plugins](https://github.com/sigmacomputing/sigma-sample-plugins).
+Custom Sigma Computing plugins, one folder per plugin.
 
-Changes from the sample:
-
-- Days are bucketed by their UTC date, so values no longer shift a day earlier in US time zones.
-- The chart scales to fill the Sigma element and no longer clips the last weeks.
-- New editor options: `title`, `countLabel` (tooltip unit), and `palette` (Green / Blue).
-
-## Editor panel
-
-| Option | Type | Notes |
+| Plugin | What it draws | Local port |
 | --- | --- | --- |
-| source | element | Table with one row per day (or per event; values are summed by day) |
-| dimension | column | Date column |
-| measures | column | Numeric column |
-| title | text | Shown above the chart |
-| countLabel | text | Unit in the tooltip, e.g. `USD` |
-| palette | dropdown | `Green` (default) or `Blue` |
+| [frappe-heatmap](frappe-heatmap) | Calendar heatmap (GitHub-contributions style) | 3000 |
+| [network-graph](network-graph) | Circular node-link diagram of flows | 3001 |
 
-## Run locally
+Each folder is a standalone React app. To run one:
 
 ```bash
+cd <plugin>
 npm install
 npm run build
-npm run serve   # serves build/ on http://localhost:3000
+npm run serve
 ```
 
-In Sigma, register the plugin (Administration → Account → Custom Plugins) with `http://localhost:3000` as the URL. It renders only in a browser on the machine running the server.
+Then register it in Sigma (Administration → Account → Custom Plugins) with the local URL. Plugins served from localhost render only in a browser on the same machine.
