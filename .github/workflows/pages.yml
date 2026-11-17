@@ -36,6 +36,13 @@ jobs:
             [ -f "$plugin/package.json" ] || continue
             echo "::group::$plugin"
             npm ci --prefix "$plugin" --no-audit --no-fund
+            # Date layout depends on the viewer's time zone: test west, east and UTC.
+            if grep -q '"test":' "$plugin/package.json"; then
+              for tz in America/Los_Angeles America/New_York UTC Europe/London Asia/Tokyo Australia/Sydney Pacific/Kiritimati; do
+                echo "tests in $tz"
+                TZ=$tz CI=true npm test --prefix "$plugin" -- --watchAll=false --passWithNoTests
+              done
+            fi
             npm run build --prefix "$plugin"
             cp -r "$plugin/build" "_site/$plugin"
             echo "::endgroup::"
