@@ -201,6 +201,90 @@ describe('data edge cases', () => {
   });
 });
 
+describe('review 2026-11-17 regressions', () => {
+  test.each([
+    ['1900-01-01', utc(1900, 1, 1)],
+    ['9999-12-31', utc(9999, 12, 31)],
+    ['epoch 0', 0],
+  ])('one stray date (%s) does not blow up the range', (_, stray) => {
+    const { dates, vals, expected } = series(utc(2026, 1, 1), 365);
+    const t0 = Date.now();
+    const { container } = show([...dates, stray], [...vals, 999]);
+    expect(Date.now() - t0).toBeLessThan(3000);
+    expect(checkLayout(container, expected).problems).toEqual([]);
+    expect(container.querySelector('.App-note').textContent).toBe('1 row is outside this range.');
+  });
+
+  test('more than ten years keeps the latest ten', () => {
+    const { dates, vals } = series(utc(2010, 1, 1), 16 * 365);
+    const { container } = show(dates, vals);
+    const cs = cells(container).map(c => c.date).sort();
+    const last = ymd(dates[dates.length - 1]);
+    expect(cs[cs.length - 1]).toBe(last);
+    expect(cs.length).toBeLessThanOrEqual(3653);
+    expect(cs.length).toBeGreaterThan(3600);
+    expect(container.querySelector('.App-note')).not.toBeNull();
+  });
+
+  test('many tiny values still add up', () => {
+    const d = Array(1000).fill(utc(2026, 5, 1));
+    const { container } = show(d, Array(1000).fill(0.0000004));
+    expect(cells(container)[0].value).toBe('0.0004');
+  });
+
+  test('thousands of cent amounts sum exactly', () => {
+    let seed = 42;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let trial = 0; trial < 20; trial++) {
+      const cents = Array.from({ length: 5000 }, () => Math.floor(rnd() * 1000000));
+      const exact = cents.reduce((a, b) => a + b, 0);
+      const { container, unmount } = show(Array(5000).fill(utc(2026, 5, 1)), cents.map(c => c / 100));
+      expect(Math.round(Number(cells(container)[0].value) * 100)).toBe(exact);
+      expect(cells(container)[0].value).toBe(String(exact / 100));
+      unmount();
+    }
+  });
+
+  test('date strings without a zone keep their written date', () => {
+    const { container } = show(
+      ['2026-05-02T21:00:00', '05/03/2026', '2026-05-04 23:30', '2026-02-31', '2026-05-05T23:00:00-05:00'],
+      [1, 2, 3, 4, 5]);
+    expect(checkLayout(container, {
+      '2026-05-02': 1, '2026-05-03': 2, '2026-05-04': 3, '2026-05-06': 5,
+    }).problems).toEqual([]);
+  });
+
+  test('tooltip keeps small values', () => {
+    const { container } = show(Array(1000).fill(utc(2026, 5, 1)), Array(1000).fill(0.0000004));
+    container.querySelector('rect.day').dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    expect(container.querySelector('.graph-svg-tip').textContent).toContain('0.0004 USD');
+  });
+
+  test('a failed first render recovers on new data and leaks no resize listener', () => {
+    const add = jest.spyOn(window, 'addEventListener');
+    const remove = jest.spyOn(window, 'removeEventListener');
+    const Heatmap = require('frappe-charts').Heatmap;
+    const realCalc = Heatmap.prototype.calc;
+    Heatmap.prototype.calc = function () { throw new Error('boom'); };
+    const a = series(utc(2026, 1, 1), 30);
+    const r = show(a.dates, a.vals);
+    expect(r.container.querySelector('.App-error')).not.toBeNull();
+    const resizeAdds = add.mock.calls.filter(c => c[0] === 'resize').length;
+    const resizeRemoves = remove.mock.calls.filter(c => c[0] === 'resize').length;
+    expect(resizeAdds).toBeGreaterThan(0);
+    expect(resizeRemoves).toBe(resizeAdds);
+    Heatmap.prototype.calc = realCalc;
+    const b = series(utc(2026, 3, 1), 365);
+    plugin.__state.data = { D: b.dates, M: b.vals };
+    r.rerender(<App />);
+    act(() => { jest.runAllTimers(); });
+    expect(r.container.querySelector('.App-error')).toBeNull();
+    expect(checkLayout(r.container, b.expected).problems).toEqual([]);
+    add.mockRestore(); remove.mockRestore();
+    errors.length = 0; // the forced failure logs on purpose
+  });
+});
+
 describe('lifecycle', () => {
   test('repeated data updates do not pile up mousemove listeners', () => {
     const spy = jest.spyOn(window.HTMLDivElement.prototype, 'addEventListener');
